@@ -1,5 +1,6 @@
 .DS_Store
-/.kube/config
+.kube/config
+.kube/token
 /mutlipass/cloud-init.yaml
 ansible/.vault_pass
 ansible/inventory

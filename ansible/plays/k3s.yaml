@@ -1,0 +1,115 @@
+---
+- name: Setup k3s servers
+  hosts: leaders
+  remote_user: ubuntu
+
+  vars:
+    # - k3s_version: v1.17.14+k3s3
+    ## Server
+    - k3s_datastore_endpoint: "http://{{ cluster_ip }}:{{ cluster_port_etcd }}"
+    # - k3s_datastore_endpoint: https://192.168.64.2:2379,https://192.168.64.3:2379,https://192.168.64.4:2379
+    # - k3s_datastore_catfile: /etc/etcd/etcd-ca.crt
+    # - k3s_datastore_certfile: '/etc/etcd/server.crt'
+    # - k3s_datastore_keyfile: '/etc/etcd/server.key'
+    # - no-traefik: false
+    # - no-servicelb: false
+
+    - inventory_groupname: "{{ hostvars[inventory_hostname].group_names[0] }}"
+
+  tasks:
+
+    - name: Update the /etc/hosts file with cluster etcd domain 
+      become: yes
+      lineinfile:
+        path: "/etc/hosts"
+        regexp: ".*\t{{ cluster_domain_etcd }}"
+        line: "{{ cluster_ip }}\t{{ cluster_domain_etcd }}"
+        state: present
+        backup: yes
+
+    - name: Update the /etc/hosts file with cluster kubernetes domain 
+      become: yes
+      lineinfile:
+        path: "/etc/hosts"
+        regexp: ".*\t{{ cluster_domain_kubernetes }}"
+        line: "{{ cluster_ip }}\t{{ cluster_domain_kubernetes }}"
+        state: present
+        backup: yes
+
+    - name: Update the /etc/hosts file with cluster rancher domain 
+      become: yes
+      lineinfile:
+        path: "/etc/hosts"
+        regexp: ".*\t{{ cluster_domain_rancher }}"
+        line: "{{ cluster_ip }}\t{{ cluster_domain_rancher }}"
+        state: present
+        backup: yes
+      
+    # - name: Remove old k3s agent components
+    #   become: true
+    #   shell: sh /usr/local/bin/k3s-agent-uninstall.sh
+
+    # - name: Remove old k3s server components
+    #   become: true
+    #   shell: sh /usr/local/bin/k3s-uninstall.sh
+
+    - name: Install k3s server components
+      become: yes
+      shell: curl -sfL https://get.k3s.io | sh -s -
+      environment:
+        INSTALL_K3S_EXEC: "--tls-san {{ cluster_ip }} --disable servicelb --disable traefik"
+        # INSTALL_K3S_VERSION: '{{ k3s_version }}'
+        K3S_DATASTORE_ENDPOINT: "{{ k3s_datastore_endpoint }}"
+        # K3S_DATASTORE_CAFILE: '{{ k3s_datastore_catfile }}'
+        # K3S_DATASTORE_CERTFILE: '{{ k3s_datastore_certfile }}'
+        # K3S_DATASTORE_KEYFILE: '{{ k3s_datastore_keyfile }}'
+      register: k3s_server_install
+
+    - name: Fetch kubernetes configuration file
+      become: true
+      fetch:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: ../../.kube/config
+        flat: yes
+      when: inventory_hostname == groups[hostvars[inventory_hostname].group_names[0]][0]
+
+    - name: Fetch kubernetes configuration file
+      become: true
+      fetch:
+        src: /var/lib/rancher/k3s/server/node-token
+        dest: ../../.kube/token
+        flat: yes
+      when: inventory_hostname == groups[hostvars[inventory_hostname].group_names[0]][0]
+
+- name: Setup k3s agents
+  hosts: workers
+  remote_user: ubuntu
+
+  vars:
+
+    - k3s_token: "{{ lookup('file', '../../.kube/token') }}"
+    - k3s_kube_endpoint: https://{{ cluster_ip }}:{{ cluster_port_kubernetes }}
+
+  tasks:
+
+    - name: Update the /etc/hosts file with cluster kubernetes domain 
+      become: yes
+      lineinfile:
+        path: "/etc/hosts"
+        regexp: ".*\t{{ cluster_domain_kubernetes }}"
+        line: "{{ cluster_ip }}\t{{ cluster_domain_kubernetes }}"
+        state: present
+        backup: yes
+    
+#     # - name: Remove old agent components
+#     #   become: true
+#     #   shell: sudo sh /usr/local/bin/k3s-agent-uninstall.sh
+
+    - name: Install k3s agent components
+      become: yes
+      shell: curl -sfL https://get.k3s.io | sh -
+      environment:
+        # INSTALL_K3S_VERSION: '{{ k3s_version }}'
+        K3S_TOKEN: '{{ k3s_token }}'
+        K3S_URL: '{{ k3s_kube_endpoint }}'
+      register: k3s_server_install
