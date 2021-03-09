@@ -1,0 +1,9 @@
+---
+- name: Preprare nodes
+  hosts: leaders:workers
+  remote_user: ubuntu
+
+  roles:
+
+    - common/update
+    - common/disable_swap

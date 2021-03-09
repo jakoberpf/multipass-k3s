@@ -1,0 +1,12 @@
+---
+- name: Prepare nodes
+  import_playbook: plays/prepare.yaml
+
+- name: Setup etcd database cluster
+  import_playbook: plays/etcd.yaml
+
+- name: Setup haproxy and keepalive as loadbalancer
+  import_playbook: plays/loadbalancer.yaml
+
+- name: Setup k3s kubernetes cluster
+  import_playbook: plays/k3s.yaml

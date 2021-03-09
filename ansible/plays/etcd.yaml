@@ -1,0 +1,19 @@
+---
+- name: Setup etcd database cluster
+  hosts: leaders
+  remote_user: ubuntu
+
+  roles:
+
+    - name: database/etcd
+      vars:
+        # Defined by directory (look for individual server certificates)
+        # etcd_server_dir: /Users/jakoberpf/Projects/ACloudGuru/kubernetes-the-hard-way/terraform-aws/ansible/01-certificates/controller.
+        # Defined by file (look for a single server certificate)
+        # etcd_server: /Users/jakoberpf/Projects/ACloudGuru/kubernetes-the-hard-way/terraform-aws/ansible/01-certificates/kubernetes
+
+        # etcd_ca: /Users/jakoberpf/Projects/ACloudGuru/kubernetes-the-hard-way/terraform-aws/ansible/01-certificates/ca
+
+        etcd_tls: false
+        etcd_interface: enp0s2
+        # etcd_token: # set in vault

@@ -1,0 +1,11 @@
+# Virtual IPs
+cluster_ip: 192.168.64.101
+cluster_interface: enp0s2
+# Ports for virtual IPs
+cluster_port_etcd: 12379
+cluster_port_kubernetes: 16443
+# Domains for virtual IPs
+cluster_domain_etcd: etcd.k3s.local
+cluster_domain_haproxy: haproxy.k3s.local
+cluster_domain_kubernetes: kubernetes.k3s.local
+cluster_domain_rancher: rancher.k3s.local
