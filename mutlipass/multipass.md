@@ -20,3 +20,7 @@ multipass version
 ```
 # Check dhacpd leases
 https://blog.karldenby.com/2020/03/24/multipass-on-mac/
+
+## TODO 
+(https://github.com/Schidstorm/terraform-provider-multipass)
+(https://gist.github.com/lucj/5a0e2286b40130d02388a264e6924ed4)
